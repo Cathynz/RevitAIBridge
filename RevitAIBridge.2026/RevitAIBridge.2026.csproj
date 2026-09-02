@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2026</RevitVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>RevitAIBridge</AssemblyName>
+    <RootNamespace>RevitAIBridge</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\$(RevitVersion)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\src\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference-only. Never ships with the add-in. -->
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.*"
+                       ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.*"
+                       ExcludeAssets="runtime" PrivateAssets="all" />
+    <!-- Ships with the add-in — powers RoslynScriptExecutor. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.11.0" />
+  </ItemGroup>
+
+</Project>

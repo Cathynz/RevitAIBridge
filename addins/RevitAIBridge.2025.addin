@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Drop this file in:
+    %APPDATA%\Autodesk\Revit\Addins\2025\
+
+  Per-user location. No admin rights, no installer, no ProgramData.
+-->
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitAI Bridge 2025</Name>
+    <Assembly>C:\Tools\RevitAIBridge\2025\RevitAIBridge.dll</Assembly>
+    <AddInId>{78912de6-644f-4710-8678-8be73b3d1aba}</AddInId>
+    <FullClassName>RevitAIBridge.BridgeApp</FullClassName>
+    <VendorId>CCHOI</VendorId>
+    <VendorDescription>RevitAI Bridge — AI-agnostic folder interface</VendorDescription>
+  </AddIn>
+</RevitAddIns>

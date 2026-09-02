@@ -1,0 +1,24 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <Authors>Cathy Choi</Authors>
+    <Product>RevitAI Bridge</Product>
+    <!--
+      Required for .NET 8-hosted Revit add-ins (Revit 2025+). Without this,
+      Revit's AssemblyLoadContext fails to instantiate the entry type with
+      System.TypeLoadException: Could not load type 'X' from assembly 'Y'.
+    -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <!--
+    No Directory.Packages.props / central package management here.
+    Each project pins its own Nice3point.Revit.Api.* version because the
+    same package id needs a different version per Revit year — that's
+    what CPM's single global version per package id can't express cleanly.
+    Keep versions inline in each .csproj instead.
+  -->
+
+</Project>
