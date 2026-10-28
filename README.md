@@ -2,9 +2,10 @@
 
 Lets an AI helper (or you) talk to Revit.
 
-Revit is a program for designing buildings. This small add-on lets another program, such as an
-AI helper, give Revit a little job and get the answer back. For example: "What is this project
-called?" or "How many walls are there?"
+Revit is a program for designing buildings. RevitAI Bridge is an *add-in*: a small extra
+program that you plug into Revit, a bit like adding an app to a phone. Once it's installed,
+another program, such as an AI helper, can give Revit a little job and get the answer back. For
+example: "What is this project called?" or "How many walls are there?"
 
 It works like a mailbox, using a folder on your computer:
 
@@ -24,11 +25,11 @@ locked-down machine that setting doesn't survive a restart, so Routes never stay
 has nothing to save, because the files are the state. There is no service to keep alive and no
 port to open in a firewall.
 
-## Features
+## Features (for developers)
 
 - Scripts are real C#, run through Roslyn. `Doc`, `UiDoc`, `UiApp` and `App` are ready to use
   with no setup, so the full Revit API is available. There is no fixed list of commands.
-- The add-on has no ribbon button and no dialog. To see that it's running, check
+- The add-in has no ribbon button and no dialog. To see that it's running, check
   `bridge_status.json`. It updates about every 30 seconds, even while Revit is idle, not only at
   startup.
 - Nothing runs except Revit. When you close Revit the bridge is gone, with nothing left to
@@ -51,8 +52,9 @@ port to open in a firewall.
 1. On this GitHub page, click the green **Code** button, then **Download ZIP**. When it
    finishes, right-click the ZIP file and choose **Extract All**.
 2. Save your work and close Revit.
-3. Open a blue PowerShell window in the new folder. Open the folder in File Explorer, click the
-   address bar at the top, type `powershell`, and press Enter.
+3. Open a blue PowerShell window (a window where you type commands) in the new folder. Open the
+   folder in File Explorer, click the address bar at the top, type `powershell`, and press
+   Enter.
 4. Copy this line, paste it into the blue window, and press Enter:
 
    ```powershell
@@ -60,8 +62,9 @@ port to open in a firewall.
    ```
 
    Wait. The first time takes a few minutes. When it says **Done.**, it worked.
-5. Open Revit and open any project. Revit shows a box saying it can't check who made the
-   add-on. Click **Always Load**. Revit asks this about every new add-on, so it's normal.
+5. Open Revit and open any project. Revit shows a box called "Security - Unsigned Add-In". It
+   says "The publisher of this add-in could not be verified." That only means Revit doesn't know
+   who made it. Click **Always Load**. Revit asks this about every new add-in, so it's normal.
 6. Go back to the blue window, paste this, and press Enter:
 
    ```powershell
@@ -96,12 +99,12 @@ The installer does these steps for each Revit year it finds:
 
 ## Running a script
 
-You give Revit a small piece of C# code. It runs that code inside your open project and hands
-back the answer. The code is called a *script*. You don't need to be a programmer to try the
-examples below.
+You give Revit a short set of instructions, written as code (the language is called C#). Revit
+follows them inside your open project and hands back the answer. A set of instructions like
+this is called a *script*. You don't need to be a programmer to try the examples below.
 
-Before you start, Revit must be open with a project loaded, and the add-on must be installed
-(see [Quick start](#quick-start-install-it-in-about-5-minutes)).
+Before you start, open Revit and open any project. You also need to have done the
+[install steps](#quick-start-install-it-in-about-5-minutes) first.
 
 ### The easy way: one command
 
@@ -165,7 +168,9 @@ does this for you.
 
 ### Scripts that change the model
 
-A read-only query needs nothing else. A script that edits the model manages its own transaction:
+A script that only reads from the model needs nothing else. A script that edits the model has to
+wrap its changes in a *transaction*, which is how Revit groups changes so they can be undone
+together:
 
 ```csharp
 using (var t = new Transaction(Doc, "My edit"))
