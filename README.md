@@ -1,6 +1,6 @@
 # RevitAI Bridge
 
-**Lets an AI helper (or you) talk to Revit.**
+Lets an AI helper (or you) talk to Revit.
 
 Revit is a program for designing buildings. This small add-on lets another program, such as an
 AI helper, give Revit a little job and get the answer back. For example: "What is this project
@@ -19,58 +19,58 @@ server, no port, no config file. See [CONTRACT.md](CONTRACT.md).)*
 
 ## Why a folder instead of pyRevit Routes / MCP
 
-The pyRevit Routes server needs its "enabled" state to persist in `pyRevit_config.ini`, and on
-a locked-down machine that setting won't save across restarts — so Routes never stays on. A
-folder has no state to persist: the files *are* the state. No service to keep alive, no port to
-firewall, no server process to crash.
+The pyRevit Routes server needs its "enabled" setting saved in `pyRevit_config.ini`. On a
+locked-down machine that setting doesn't survive a restart, so Routes never stays on. A folder
+has nothing to save, because the files are the state. There is no service to keep alive and no
+port to open in a firewall.
 
 ## Features
 
-- **Full Revit API access.** Scripts run as real C# via Roslyn, with `Doc`, `UiDoc`, `UiApp`, and
-  `App` available with zero setup — not a fixed set of pre-built commands.
-- **No UI, by design.** The add-in has no ribbon button, no dialog, nothing to click. It's a
-  silent background watcher. Proof of life is `bridge_status.json`'s heartbeat, which updates
-  every ~30s even while idle, not just at startup.
-- **Zero persistent server.** Nothing runs except Revit itself. Close Revit, the bridge is gone;
-  no cleanup, no orphaned process.
-- **Verbose errors on purpose.** A failed script gets its full exception type, message, and
-  stack trace back in `last_result.txt` — enough for an agent (or you) to fix the script and
-  retry without switching tools.
+- Scripts are real C#, run through Roslyn. `Doc`, `UiDoc`, `UiApp` and `App` are ready to use
+  with no setup, so the full Revit API is available. There is no fixed list of commands.
+- The add-on has no ribbon button and no dialog. To see that it's running, check
+  `bridge_status.json`. It updates about every 30 seconds, even while Revit is idle, not only at
+  startup.
+- Nothing runs except Revit. When you close Revit the bridge is gone, with nothing left to
+  clean up.
+- When a script fails, `last_result.txt` holds the full exception type, message and stack
+  trace. That is enough for an agent (or you) to fix the script and try again without
+  switching tools.
 
 ## Quick start: install it in about 5 minutes
 
-**What you need**
+### What you need
 
 - A Windows computer with **Revit 2025 or 2026**.
 - The internet (the installer downloads a few small things).
-- A free Microsoft tool called **.NET**. If you don't have it, the installer tells you exactly
+- A free Microsoft tool called .NET. If you don't have it, the installer tells you exactly
   what to type.
 
-**Steps**
+### Steps
 
-1. **Get the files.** On this GitHub page, click the green **Code** button, then
-   **Download ZIP**. When it finishes, right-click the ZIP file and choose **Extract All**.
-2. **Close Revit.** Save your work first.
-3. **Open a blue PowerShell window in the new folder.** Open the folder in File Explorer, click
-   the address bar at the top, type `powershell`, and press Enter.
-4. **Copy this line, paste it into the blue window, and press Enter:**
+1. On this GitHub page, click the green **Code** button, then **Download ZIP**. When it
+   finishes, right-click the ZIP file and choose **Extract All**.
+2. Save your work and close Revit.
+3. Open a blue PowerShell window in the new folder. Open the folder in File Explorer, click the
+   address bar at the top, type `powershell`, and press Enter.
+4. Copy this line, paste it into the blue window, and press Enter:
 
    ```powershell
    powershell -ExecutionPolicy Bypass -File .\install.ps1
    ```
 
-   Wait. The first time it takes a few minutes. When it says **Done.** it worked.
-5. **Open Revit and open any project.** Revit shows a box saying it can't check who made the
-   add-on. Click **Always Load**. Revit asks this about every new add-on. It is normal.
-6. **Test it.** Go back to the blue window, paste this, and press Enter:
+   Wait. The first time takes a few minutes. When it says **Done.**, it worked.
+5. Open Revit and open any project. Revit shows a box saying it can't check who made the
+   add-on. Click **Always Load**. Revit asks this about every new add-on, so it's normal.
+6. Go back to the blue window, paste this, and press Enter:
 
    ```powershell
    .\scripts\Run-RevitScript.ps1 'Doc.Title'
    ```
 
-   You should see the word **OK** and the name of your project. That's it, it works!
+   You should see **OK** and the name of your project.
 
-**If something goes wrong**
+### If something goes wrong
 
 | What you see | What to do |
 |---|---|
@@ -79,9 +79,9 @@ firewall, no server process to crash.
 | "Revit looks closed" in step 6 | Open Revit with a project, wait 30 seconds, and try step 6 again. |
 | You never saw the **Always Load** box | Revit only asks the first time. Try step 6 anyway. |
 
-**To update later:** download the new ZIP and do steps 2 to 4 again.
+To update later, download the new ZIP and do steps 2 to 4 again.
 
-**To remove it:** close Revit, then run
+To remove it, close Revit, then run
 `powershell -ExecutionPolicy Bypass -File .\uninstall.ps1`.
 
 ### For developers: doing it by hand
@@ -96,16 +96,16 @@ The installer does these steps for each Revit year it finds:
 
 ## Running a script
 
-You give Revit a small piece of C# code, and it runs that code inside your open project and
-hands back the answer. The code is called a *script*. You don't need to be a programmer to try
-the examples below.
+You give Revit a small piece of C# code. It runs that code inside your open project and hands
+back the answer. The code is called a *script*. You don't need to be a programmer to try the
+examples below.
 
-**Before you start:** Revit must be open with a project loaded, and the add-in must be
-installed (see [Quick start](#quick-start)).
+Before you start, Revit must be open with a project loaded, and the add-on must be installed
+(see [Quick start](#quick-start-install-it-in-about-5-minutes)).
 
 ### The easy way: one command
 
-Open **PowerShell** in this repo's folder and run:
+Open PowerShell in this repo's folder and run:
 
 ```powershell
 .\scripts\Run-RevitScript.ps1 'Doc.Title'
@@ -140,8 +140,8 @@ code 0 on `OK` and 1 on `ERROR` or a timeout, so you can use it from other scrip
 
 ### What it does behind the scenes
 
-The helper is just doing the [folder protocol](CONTRACT.md) for you. You can do the same by hand
-in PowerShell, which is also what any other tool or AI agent would do:
+The helper does the [folder protocol](CONTRACT.md) for you. You can do the same by hand in
+PowerShell, which is also what any other tool or AI agent would do:
 
 ```powershell
 $root = "$env:LOCALAPPDATA\RevitAIBridge"
@@ -176,17 +176,16 @@ using (var t = new Transaction(Doc, "My edit"))
 }
 ```
 
-**One quirk to know:** the final line of your script must have **no trailing semicolon** to be
-captured as the return value — this is a Roslyn scripting behavior, not a bridge bug. With a
-semicolon it's treated as a statement and `last_result.txt` comes back empty even though the
-script ran fine.
+The last line of your script must not end with a semicolon, or its value won't come back as the
+result. This is how Roslyn scripting works. With a semicolon the line counts as a statement, so
+`last_result.txt` shows no return value even though the script ran fine.
 
 ### Troubleshooting
 
 | What you see | What it means |
 |---|---|
 | "Revit looks closed" | The bridge hasn't reported in for over two minutes. Start Revit and open a project. |
-| "No bridge_status.json" | The add-in has never started. Re-check the [Quick start](#quick-start) steps. |
+| "No bridge_status.json" | The add-in has never started. Re-check the [Quick start](#quick-start-install-it-in-about-5-minutes) steps. |
 | Timed out | Revit only runs tasks when it's idle. Close any open dialog, finish the command you're in, and try again. |
 | `OK` followed by `(script completed, no return value)` | Your last line ended with a semicolon. Remove it. |
 | `ERROR` followed by a long message | The script has a mistake. The message says what and where. Fix it and run again. |
@@ -199,12 +198,13 @@ Full spec: [`CONTRACT.md`](CONTRACT.md). Summary:
 | File | Written by | Purpose |
 |---|---|---|
 | `current_task.csx` | Agent | The C# to execute |
-| `run.flag` | Agent | Trigger (empty file — existence is the signal, written last) |
-| `last_result.txt` | Bridge | `OK`/`ERROR` + payload, written atomically |
+| `run.flag` | Agent | Trigger. An empty file; its existence is the signal. Written last. |
+| `last_result.txt` | Bridge | `OK` or `ERROR` plus the payload, written atomically |
 | `bridge_status.json` | Bridge | Heartbeat: is Revit alive, which version, which document |
 
-No queue (one task at a time), no authentication (folder permissions are the security boundary),
-no streaming (fire, wait, read).
+There is no queue, so Revit runs one task at a time. There is no authentication, so folder
+permissions are the only protection. Results are not streamed: you send a task, wait, then read
+the result.
 
 ## Supported versions
 
@@ -212,7 +212,7 @@ no streaming (fire, wait, read).
 |---|---|---|
 | 2025 | `net8.0-windows` | Supported |
 | 2026 | `net8.0-windows` | Supported |
-| 2027 | — | Not yet added — same steps as 2025/2026 when needed |
+| 2027 | n/a | Not added yet. It would follow the same steps as 2025 and 2026. |
 
 ## Project layout
 
@@ -238,34 +238,33 @@ addins/                       .addin manifests, one per version, fresh GUIDs
 
 ## Security notes
 
-- **Unsigned binary.** This project isn't code-signed, so Revit's unsigned-add-in prompt will
-  appear on every fresh install (once per machine if you choose *Always Load*). That prompt is
-  about the publisher, not about whether the code works — it's expected for any dev-built add-in
-  without a purchased signing certificate.
-- **No authentication on the folder.** Anyone who can write to `%LOCALAPPDATA%\RevitAIBridge\`
-  can run arbitrary code inside your Revit session, with full API access including model edits.
-  That's the entire security model — treat write access to that folder like you'd treat shell
-  access to the machine.
-- **Scripts run unsandboxed.** `RoslynScriptExecutor` gives a script the same permissions Revit
-  itself has. There's no allow-list of "safe" operations; a script can do anything the Revit API
-  can do, including deleting elements or overwriting files the process can reach.
+- This project isn't code-signed, so Revit shows its unsigned add-in prompt on a fresh install.
+  If you choose *Always Load*, it appears once per machine. The prompt only says Revit can't
+  identify the publisher. Any add-in built without a purchased signing certificate triggers it.
+- Anyone who can write to `%LOCALAPPDATA%\RevitAIBridge\` can run arbitrary code inside your
+  Revit session, with full API access including model edits. Treat write access to that folder
+  like shell access to the machine.
+- `RoslynScriptExecutor` gives a script the same permissions Revit itself has. There is no
+  allow-list of safe operations. A script can do anything the Revit API can do, including
+  deleting elements or overwriting files the process can reach.
 
 ## Known limitations
 
-- Reading text *content* from linked/imported CAD (DWG) files isn't reliably possible through
-  the standard Revit API — some text entities import as empty, zero-volume placeholder solids
-  with no recoverable position or string data. Points, lines, and solids with real geometry are
-  fine; text strings are not guaranteed to be.
+- Reading text *content* from linked or imported CAD (DWG) files isn't reliably possible
+  through the standard Revit API. Some text entities import as empty, zero-volume placeholder
+  solids with no recoverable position or string data. Points, lines and solids with real
+  geometry work; text strings aren't guaranteed.
 - Not every `FloorType` supports slab shape editing (`SlabShapeEditor.Enable()` can silently
-  no-op with no exception). If you need sloped/point-edited floors, verify `IsEnabled` and
-  `SlabShapeVertices.Size` after enabling rather than trusting the absence of an error.
+  do nothing, with no exception). If you need sloped or point-edited floors, check
+  `IsEnabled` and `SlabShapeVertices.Size` after enabling instead of trusting the absence of an
+  error.
 
 ## Contributing
 
 Source is under `src/`, shared by both version projects via `<Compile Include="..\src\**\*.cs" />`
-in each `.csproj` — edit once, both versions rebuild from the same code. If you're using an AI
-coding agent to work on this repo, see [`AGENTS.md`](AGENTS.md) for environment-specific context
-it should know before touching the code.
+in each `.csproj`. Edit once and both versions rebuild from the same code. If you're using an AI
+coding agent to work on this repo, see [`AGENTS.md`](AGENTS.md) for context it should know
+before touching the code.
 
 ## License
 
