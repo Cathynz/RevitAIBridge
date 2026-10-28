@@ -1,14 +1,21 @@
 # RevitAI Bridge
 
-A standalone Revit add-in that lets any AI agent (or any script, or any human with a text
-editor) drive Revit through a watched folder — full Revit API access, no MCP server, no port,
-no config file that needs to persist.
+**Lets an AI helper (or you) talk to Revit.**
 
-```
-Agent writes current_task.csx  →  touches run.flag  →  Revit runs it  →  reads last_result.txt
-```
+Revit is a program for designing buildings. This small add-on lets another program, such as an
+AI helper, give Revit a little job and get the answer back. For example: "What is this project
+called?" or "How many walls are there?"
 
-That's the whole interface. If your tool can read and write files, it can drive Revit.
+It works like a mailbox, using a folder on your computer:
+
+1. Someone puts a note in the folder: "please do this".
+2. Revit sees the note and does the job.
+3. Revit puts the answer in the folder.
+
+There is nothing to click inside Revit. It works quietly in the background.
+
+*(For developers: that's a folder watcher with full Revit API access through C# scripts. No
+server, no port, no config file. See [CONTRACT.md](CONTRACT.md).)*
 
 ## Why a folder instead of pyRevit Routes / MCP
 
@@ -30,24 +37,62 @@ firewall, no server process to crash.
   stack trace back in `last_result.txt` — enough for an agent (or you) to fix the script and
   retry without switching tools.
 
-## Quick start
+## Quick start: install it in about 5 minutes
 
-1. **Build.** Open `RevitAIBridge.sln`, build the project matching your Revit version
-   (2025 or 2026 — see [Supported versions](#supported-versions)).
-2. **Deploy the DLL.** Copy the build output (`RevitAIBridge.dll`, `.pdb`, `.runtimeconfig.json`,
-   and — since it ships with Roslyn — the `Microsoft.CodeAnalysis.*.dll` files and their
-   language-resource subfolders) to a folder of your choice, e.g. `C:\Tools\RevitAIBridge\2026\`.
-3. **Point the manifest at it.** Open `addins\RevitAIBridge.2026.addin` and set `<Assembly>` to
-   the path you used above.
-4. **Install the manifest.** Copy that `.addin` file to
-   `%APPDATA%\Autodesk\Revit\Addins\2026\`.
-5. **Start Revit.** First launch will show Revit's standard "unsigned add-in" prompt (this DLL
-   isn't code-signed) — choose **Always Load** so it stops asking.
-6. **Verify.** Check `%LOCALAPPDATA%\RevitAIBridge\bridge_status.json` — a fresh `updated_utc`
-   means it's running.
+**What you need**
 
-Repeat for each Revit version you use; each has its own project, output folder, and `.addin`
-file so 2025 and 2026 can run side by side without conflicting.
+- A Windows computer with **Revit 2025 or 2026**.
+- The internet (the installer downloads a few small things).
+- A free Microsoft tool called **.NET**. If you don't have it, the installer tells you exactly
+  what to type.
+
+**Steps**
+
+1. **Get the files.** On this GitHub page, click the green **Code** button, then
+   **Download ZIP**. When it finishes, right-click the ZIP file and choose **Extract All**.
+2. **Close Revit.** Save your work first.
+3. **Open a blue PowerShell window in the new folder.** Open the folder in File Explorer, click
+   the address bar at the top, type `powershell`, and press Enter.
+4. **Copy this line, paste it into the blue window, and press Enter:**
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+
+   Wait. The first time it takes a few minutes. When it says **Done.** it worked.
+5. **Open Revit and open any project.** Revit shows a box saying it can't check who made the
+   add-on. Click **Always Load**. Revit asks this about every new add-on. It is normal.
+6. **Test it.** Go back to the blue window, paste this, and press Enter:
+
+   ```powershell
+   .\scripts\Run-RevitScript.ps1 'Doc.Title'
+   ```
+
+   You should see the word **OK** and the name of your project. That's it, it works!
+
+**If something goes wrong**
+
+| What you see | What to do |
+|---|---|
+| "Revit is open" | Save your work, close Revit, and do step 4 again. |
+| It says .NET is missing | It shows one line starting with `winget`. Paste that line, press Enter, then do step 4 again. |
+| "Revit looks closed" in step 6 | Open Revit with a project, wait 30 seconds, and try step 6 again. |
+| You never saw the **Always Load** box | Revit only asks the first time. Try step 6 anyway. |
+
+**To update later:** download the new ZIP and do steps 2 to 4 again.
+
+**To remove it:** close Revit, then run
+`powershell -ExecutionPolicy Bypass -File .\uninstall.ps1`.
+
+### For developers: doing it by hand
+
+The installer does these steps for each Revit year it finds:
+
+1. Compile `RevitAIBridge.<year>\RevitAIBridge.<year>.csproj` in Release mode.
+2. Copy the output to `%LOCALAPPDATA%\RevitAIBridge\bin\<year>\`. That folder must include
+   `RevitAIBridge.dll`, `.runtimeconfig.json` and the `Microsoft.CodeAnalysis.*.dll` files.
+3. Copy `addins\RevitAIBridge.<year>.addin` to `%APPDATA%\Autodesk\Revit\Addins\<year>\` and
+   change its `<Assembly>` line to the full path of that DLL.
 
 ## Running a script
 
