@@ -51,18 +51,74 @@ file so 2025 and 2026 can run side by side without conflicting.
 
 ## Running a script
 
-```bash
-# 1. Write your script (never write current_task.csx directly — atomic write)
-cat > "%LOCALAPPDATA%\RevitAIBridge\current_task.tmp" << 'EOF'
-Doc.Title
-EOF
-move "%LOCALAPPDATA%\RevitAIBridge\current_task.tmp" "%LOCALAPPDATA%\RevitAIBridge\current_task.csx"
+You give Revit a small piece of C# code, and it runs that code inside your open project and
+hands back the answer. The code is called a *script*. You don't need to be a programmer to try
+the examples below.
 
-# 2. Trigger it
-echo. > "%LOCALAPPDATA%\RevitAIBridge\run.flag"
+**Before you start:** Revit must be open with a project loaded, and the add-in must be
+installed (see [Quick start](#quick-start)).
 
-# 3. Poll last_result.txt until its mtime changes, then read it
+### The easy way: one command
+
+Open **PowerShell** in this repo's folder and run:
+
+```powershell
+.\scripts\Run-RevitScript.ps1 'Doc.Title'
 ```
+
+You should see something like:
+
+```
+OK
+MyProject
+```
+
+`Doc.Title` is the whole script: `Doc` means "the project that's open in Revit", and `.Title`
+is its name. The first line of the reply is always `OK` or `ERROR`. Everything after it is the
+answer, or the error message if something went wrong.
+
+To run a script saved in a file, such as the ready-made ones in [`examples/`](examples):
+
+```powershell
+.\scripts\Run-RevitScript.ps1 -File .\examples\list-levels.csx
+.\scripts\Run-RevitScript.ps1 -File .\examples\count-by-category.csx
+```
+
+If PowerShell says running scripts is disabled, start it like this instead:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Run-RevitScript.ps1 'Doc.Title'
+```
+
+The helper checks that Revit is alive, waits up to two minutes for the answer, and exits with
+code 0 on `OK` and 1 on `ERROR` or a timeout, so you can use it from other scripts too.
+
+### What it does behind the scenes
+
+The helper is just doing the [folder protocol](CONTRACT.md) for you. You can do the same by hand
+in PowerShell, which is also what any other tool or AI agent would do:
+
+```powershell
+$root = "$env:LOCALAPPDATA\RevitAIBridge"
+
+# 1. Write the script to a temp file, then rename it. (The rename is atomic, so Revit never
+#    sees a half-written file. Don't write current_task.csx directly.)
+Set-Content "$root\current_task.tmp" 'Doc.Title'
+Move-Item "$root\current_task.tmp" "$root\current_task.csx" -Force
+
+# 2. Create an empty file called run.flag. Its existence is the "go" signal.
+New-Item "$root\run.flag" -ItemType File -Force | Out-Null
+
+# 3. Wait a second or two, then read the answer.
+Start-Sleep 2
+Get-Content "$root\last_result.txt"
+```
+
+In step 3, `last_result.txt` is rewritten each time a script finishes. If you read it too early
+you'll see the previous result, so check that its "last modified" time has changed. The helper
+does this for you.
+
+### Scripts that change the model
 
 A read-only query needs nothing else. A script that edits the model manages its own transaction:
 
@@ -79,6 +135,17 @@ using (var t = new Transaction(Doc, "My edit"))
 captured as the return value — this is a Roslyn scripting behavior, not a bridge bug. With a
 semicolon it's treated as a statement and `last_result.txt` comes back empty even though the
 script ran fine.
+
+### Troubleshooting
+
+| What you see | What it means |
+|---|---|
+| "Revit looks closed" | The bridge hasn't reported in for over two minutes. Start Revit and open a project. |
+| "No bridge_status.json" | The add-in has never started. Re-check the [Quick start](#quick-start) steps. |
+| Timed out | Revit only runs tasks when it's idle. Close any open dialog, finish the command you're in, and try again. |
+| `OK` followed by `(script completed, no return value)` | Your last line ended with a semicolon. Remove it. |
+| `ERROR` followed by a long message | The script has a mistake. The message says what and where. Fix it and run again. |
+| `Doc` is null / "Object reference not set" | No project is open in Revit. Open one first. |
 
 ## The folder contract
 
@@ -108,7 +175,8 @@ no streaming (fire, wait, read).
 RevitAIBridge.sln
 Directory.Build.props        shared build settings, no CPM (see file for why)
 CONTRACT.md                  the folder protocol — read this first
-CLAUDE.md                    instructions for AI coding agents working on this repo
+AGENTS.md                    instructions for AI coding agents working on this repo
+CLAUDE.md                    pointer to AGENTS.md, for Claude Code's file-lookup convention
 src/                         shared source, compiled into both version projects
   BridgeApp.cs                  IExternalApplication — watcher, idling heartbeat, wiring
   TaskHandler.cs                 IExternalEventHandler — runs inside Revit's API context
@@ -116,6 +184,8 @@ src/                         shared source, compiled into both version projects
   BridgeStatus.cs                  heartbeat writer
   IScriptExecutor.cs                execution abstraction + Echo fallback
   RoslynScriptExecutor.cs            compiles and runs current_task.csx with the real Revit API
+scripts/                      Run-RevitScript.ps1: run a script in one command
+examples/                     ready-to-run sample scripts (read-only, safe to try)
 RevitAIBridge.2025/           net8.0-windows, Nice3point.Revit.Api 2025.*
 RevitAIBridge.2026/           net8.0-windows, Nice3point.Revit.Api 2026.*
 addins/                       .addin manifests, one per version, fresh GUIDs
@@ -149,8 +219,8 @@ addins/                       .addin manifests, one per version, fresh GUIDs
 
 Source is under `src/`, shared by both version projects via `<Compile Include="..\src\**\*.cs" />`
 in each `.csproj` — edit once, both versions rebuild from the same code. If you're using an AI
-coding agent (Claude Code or similar) to work on this repo, see [`CLAUDE.md`](CLAUDE.md) for
-environment-specific context it should know before touching the code.
+coding agent to work on this repo, see [`AGENTS.md`](AGENTS.md) for environment-specific context
+it should know before touching the code.
 
 ## License
 
